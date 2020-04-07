@@ -1,0 +1,24 @@
+# a docker compose sample with services on multiple containers
+# ------------------------------------------------------------
+# target docker-compose version
+version: "3"
+# containers
+services:
+  # pull redis image from docker hub
+  redis-server:
+    image: "redis"
+  # build image from local dockerfile
+  node-app:
+    # option to restart the app
+    restart: always
+    # build file info or use just: build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # volumes to map btwn conatiner and storage
+    volumes:
+      - /home/app/node_modules
+      - .:/home/app
+    # port mapping btwn localhost and container
+    ports:
+      - "3000:3000"
