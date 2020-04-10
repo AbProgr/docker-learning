@@ -1,0 +1,57 @@
+version: "3.1"
+services:
+  postgres:
+    image: "postgres:latest"
+    environment:
+      - POSTGRES_PASSWORD=postgres_password
+  redis:
+    depends_on:
+      - postgres
+    image: "redis:latest"
+  nginx:
+    depends_on:
+      - api
+      # - client
+    restart: always
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:80"
+  api:
+    depends_on:
+      - postgres
+      - redis
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    volumes:
+      - /home/app/node_modules
+      # specific for dev env - so that whenever we change source code the docker image pulls in the latest changes
+      - ./server:/home/app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGPASSWORD=postgres_password
+      - PGPORT=5432
+  client:
+    stdin_open: true
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    volumes:
+      - /home/app/node_modules
+      - ./client:/home/app
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile.dev
+    volumes:
+      - /home/app/node_modules
+      - ./worker:/home/app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
